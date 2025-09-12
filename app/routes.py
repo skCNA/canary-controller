@@ -36,3 +36,8 @@ def set_annotations():
 
     set_ingress_annotations(ns, ing, annotations)
     return redirect(url_for("main.index"))
+
+
+@main_bp.route("/health")
+def health_check():
+    return {"status": "healthy"}, 200
