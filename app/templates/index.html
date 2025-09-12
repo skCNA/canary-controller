@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cluster Canary Control</title>
+    <meta http-equiv="refresh" content="10">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <script src="{{ url_for('static', filename='js/validate.js') }}"></script>
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h2 class="mb-4">Cluster Canary Ingress Control</h2>
+    {% if ingresses %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th>Namespace</th><th>Ingress</th><th>Host(s)</th>
+                <th>Weight</th><th>Header</th><th>Header Value</th>
+                <th>Header Pattern</th><th>Cookie</th><th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for ing in ingresses %}
+            <tr>
+                <form method="get" action="{{ url_for('main.set_annotations') }}" onsubmit="return CanaryFormValidator.validate(this)">
+                    <td>{{ ing.namespace }}</td>
+                    <td>{{ ing.name }}</td>
+                    <td>{{ ",".join(ing.hosts) }}</td>
+                    <td><input class="form-control form-control-sm" type="number" name="weight" value="{{ ing.weight }}" min="0" max="100"></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header" value="{{ ing.header }}"></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header_value" value="{{ ing.header_value }}"></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header_pattern" value="{{ ing.header_pattern }}"></td>
+                    <td><input class="form-control form-control-sm" type="text" name="cookie" value="{{ ing.cookie }}"></td>
+                    <td>
+                        <input type="hidden" name="namespace" value="{{ ing.namespace }}">
+                        <input type="hidden" name="ingress" value="{{ ing.name }}">
+                        <button class="btn btn-sm btn-primary" type="submit">Update</button>
+                    </td>
+                </form>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">No canary ingresses found.</div>
+    {% endif %}
+</div>
+</body>
+</html>
