@@ -4,8 +4,23 @@ FROM registry-ze.tencentcloudcr.com/basic/python:3.10.14-slim
 # 设置工作目录
 WORKDIR /app
 
+# 替换源
+RUN apt-get update && apt-get install curl -y \
+    && bash <(curl -sSL https://linuxmirrors.cn/main.sh) \
+         --source mirrors.aliyun.com \
+         --protocol http \
+         --use-intranet-source false \
+         --install-epel false \
+         --backup true \
+         --upgrade-software false \
+         --clean-cache true \
+         --ignore-backup-tips \
+         --pure-mode
+
+
+
 # 安装系统依赖（kubectl + curl + bash）
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends \
         curl ca-certificates bash \
     && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
     && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
