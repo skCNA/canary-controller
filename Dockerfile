@@ -5,8 +5,9 @@ FROM registry-ze.tencentcloudcr.com/basic/python:3.10.14-slim
 WORKDIR /app
 
 # 替换源
-RUN apt-get update && apt-get install curl -y \
-    && bash <(curl -sSL https://linuxmirrors.cn/main.sh) \
+RUN apt-get update && apt-get install curl bash -y \
+    && curl -sSL https://linuxmirrors.cn/main.sh -o /tmp/main.sh \
+    && bash  /tmp/main.sh \
          --source mirrors.aliyun.com \
          --protocol http \
          --use-intranet-source false \
