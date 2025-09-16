@@ -5,7 +5,7 @@ FROM registry-ze.tencentcloudcr.com/basic/python:3.10.14-slim
 WORKDIR /app
 
 # 替换源
-RUN apt-get update && apt-get install curl bash -y \
+RUN apt-get update && apt-get install curl -y \
     && curl -sSL https://linuxmirrors.cn/main.sh -o /tmp/main.sh \
     && bash  /tmp/main.sh \
          --source mirrors.aliyun.com \
@@ -23,11 +23,13 @@ COPY requirements.txt .
 COPY kubectl .
 
 # 安装系统依赖（kubectl + curl + bash）
-RUN apt-get install -y --no-install-recommends \
-        curl ca-certificates bash \
-    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
-    && rm -f kubectl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+#RUN apt-get install -y --no-install-recommends \
+#        curl ca-certificates bash \
+#    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+#    && rm -f kubectl \
+#    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+
+RUN  install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 
 RUN pip install --no-cache-dir -r requirements.txt
