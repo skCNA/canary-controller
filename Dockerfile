@@ -5,18 +5,18 @@ FROM registry-ze.tencentcloudcr.com/basic/python:3.10.14-slim
 WORKDIR /app
 
 # 替换源
-RUN apt-get update && apt-get install curl -y \
-    && curl -sSL https://linuxmirrors.cn/main.sh -o /tmp/main.sh \
-    && bash  /tmp/main.sh \
-         --source mirrors.aliyun.com \
-         --protocol http \
-         --use-intranet-source false \
-         --install-epel false \
-         --backup true \
-         --upgrade-software false \
-         --clean-cache true \
-         --ignore-backup-tips \
-         --pure-mode
+#RUN apt-get update && apt-get install curl -y \
+#    && curl -sSL https://linuxmirrors.cn/main.sh -o /tmp/main.sh \
+#    && bash  /tmp/main.sh \
+#         --source mirrors.aliyun.com \
+#         --protocol http \
+#         --use-intranet-source false \
+#         --install-epel false \
+#         --backup true \
+#         --upgrade-software false \
+#         --clean-cache true \
+#         --ignore-backup-tips \
+#         --pure-mode
 
 # 复制项目文件
 COPY requirements.txt .
