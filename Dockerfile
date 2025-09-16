@@ -38,4 +38,4 @@ COPY . .
 EXPOSE 8888
 
 # 使用 Gunicorn 作为生产级 WSGI 服务器
-CMD ["gunicorn", "-b", "0.0.0.0:8888", "run:app"]
+CMD ["python3", "run.py"]
