@@ -32,7 +32,7 @@ COPY kubectl .
 RUN  install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 COPY . .
 
