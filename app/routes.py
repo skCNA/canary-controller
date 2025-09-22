@@ -23,7 +23,7 @@ def index():
     cleanup_locks()
     ingresses = get_ingresses()
     user = request.headers.get("X-Auth-Request-Email", "anonymous")
-    print(f"header repo: \n {request.headers}")
+    # print(f"header repo: \n {request.headers}")
     return render_template("index.html", ingresses=ingresses, locks=lock_table, current_user=user)
 
 @main.route("/set", methods=["GET"])
@@ -31,7 +31,8 @@ def set_annotations():
     ns = request.args["namespace"]
     name = request.args["ingress"]
     key = (ns, name)
-    user = request.headers.get("X-Auth-Request-Email", "anonymous")
+    email = request.headers.get("X-Auth-Request-Email", "anonymous")
+    user = email.split("@", 1)[0] if email != "anonymous" else email
 
     with table_lock:
         if key not in lock_table:
@@ -54,24 +55,26 @@ def lock_ingress():
     ns = request.form["namespace"]
     name = request.form["ingress"]
     key = (ns, name)
-    user = request.headers.get("X-Auth-Request-Email", "anonymous")
-
+    email = request.headers.get("X-Auth-Request-Email", "anonymous")
+    user = email.split("@", 1)[0] if email != "anonymous" else email
 
     with table_lock:
         cleanup_locks()
         if key in lock_table and lock_table[key]["user"] != user:
             return jsonify({"error": "Already locked"}), 403
         lock_table[key] = {"user": user, "timestamp": time.time()}
-    return jsonify({"status": "locked"})
+        return jsonify({"status": "locked"})
 
 @main.route("/unlock", methods=["POST"])
 def unlock_ingress():
     ns = request.form["namespace"]
     name = request.form["ingress"]
     key = (ns, name)
-    user = request.headers.get("X-Auth-Request-Email", "anonymous")
+    email = request.headers.get("X-Auth-Request-Email", "anonymous")
+    user = email.split("@", 1)[0] if email != "anonymous" else email
+
 
     with table_lock:
         if key in lock_table and lock_table[key]["user"] == user:
             del lock_table[key]
-    return jsonify({"status": "unlocked"})
+        return jsonify({"status": "unlocked"})

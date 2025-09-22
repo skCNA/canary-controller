@@ -52,7 +52,7 @@
                     <td>{{ ing.name }}</td>
                     <td>{{ ",".join(ing.hosts) }}</td>
                     <td><input class="form-control form-control-sm" type="number" name="weight" value="{{ ing.weight }}" min="0" max="100" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
-                    <td><input class="form-control form-control-sm" type="text" name="header" value="{{ ing.header }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header" value="{{ ing.header }}" style="width:auto;min-width:200px"  {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
                     <td><input class="form-control form-control-sm" type="text" name="header_value" value="{{ ing.header_value }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
                     <td><input class="form-control form-control-sm" type="text" name="header_pattern" value="{{ ing.header_pattern }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
                     <td><input class="form-control form-control-sm" type="text" name="cookie" value="{{ ing.cookie }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
