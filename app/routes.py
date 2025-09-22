@@ -22,7 +22,9 @@ def cleanup_locks():
 def index():
     cleanup_locks()
     ingresses = get_ingresses()
-    user = request.headers.get("X-Auth-Request-Email", "anonymous")
+    email = request.headers.get("X-Auth-Request-Email", "anonymous")
+    user = email.split("@", 1)[0] if email != "anonymous" else email
+
     # print(f"header repo: \n {request.headers}")
     return render_template("index.html", ingresses=ingresses, locks=lock_table, current_user=user)
 
