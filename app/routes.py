@@ -23,7 +23,7 @@ def index():
     cleanup_locks()
     ingresses = get_ingresses()
     user = request.headers.get("X-Auth-Request-Email", "anonymous")
-    # print(f"header repo: \n {request.headers}")
+    print(f"header repo: \n {request.headers}")
     return render_template("index.html", ingresses=ingresses, locks=lock_table, current_user=user)
 
 @main.route("/set", methods=["GET"])
