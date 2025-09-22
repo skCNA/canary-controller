@@ -2,13 +2,36 @@
 <html>
 <head>
     <title>Cluster Canary Control</title>
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="60">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <script src="{{ url_for('static', filename='js/validate.js') }}"></script>
+    <script>
+        async function lockIngress(ns, ing) {
+            const formData = new FormData();
+            formData.append("namespace", ns);
+            formData.append("ingress", ing);
+            const resp = await fetch("/lock", {method:"POST", body:formData, credentials:"same-origin"});
+            const data = await resp.json();
+
+            if(!resp.ok) alert(data.error || "Lock failed");
+            else location.reload();
+        }
+        async function unlockIngress(ns, ing) {
+            const formData = new FormData();
+            formData.append("namespace", ns);
+            formData.append("ingress", ing);
+            const resp = await fetch("/unlock", {method:"POST", body:formData, credentials:"same-origin"});
+            const data = await resp.json();
+            if(!resp.ok) alert(data.error || "Unlock failed");
+            else location.reload();
+        }
+    </script>
 </head>
 <body class="bg-light">
 <div class="container mt-4">
+
     <h2 class="mb-4">Cluster Canary Ingress Control</h2>
+    <p>当前用户: <b>{{ current_user }}</b></p>
     {% if ingresses %}
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
@@ -21,20 +44,32 @@
             </thead>
             <tbody>
             {% for ing in ingresses %}
+            {% set key = (ing.namespace, ing.name) %}
+            {% set lockinfo = locks.get(key) %}
             <tr>
                 <form method="get" action="{{ url_for('main.set_annotations') }}" onsubmit="return CanaryFormValidator.validate(this)">
                     <td>{{ ing.namespace }}</td>
                     <td>{{ ing.name }}</td>
                     <td>{{ ",".join(ing.hosts) }}</td>
-                    <td><input class="form-control form-control-sm" type="number" name="weight" value="{{ ing.weight }}" min="0" max="100"></td>
-                    <td><input class="form-control form-control-sm" type="text" name="header" value="{{ ing.header }}"></td>
-                    <td><input class="form-control form-control-sm" type="text" name="header_value" value="{{ ing.header_value }}"></td>
-                    <td><input class="form-control form-control-sm" type="text" name="header_pattern" value="{{ ing.header_pattern }}"></td>
-                    <td><input class="form-control form-control-sm" type="text" name="cookie" value="{{ ing.cookie }}"></td>
+                    <td><input class="form-control form-control-sm" type="number" name="weight" value="{{ ing.weight }}" min="0" max="100" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header" value="{{ ing.header }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header_value" value="{{ ing.header_value }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
+                    <td><input class="form-control form-control-sm" type="text" name="header_pattern" value="{{ ing.header_pattern }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
+                    <td><input class="form-control form-control-sm" type="text" name="cookie" value="{{ ing.cookie }}" {% if lockinfo and lockinfo.user != current_user %}disabled{% endif %}></td>
                     <td>
                         <input type="hidden" name="namespace" value="{{ ing.namespace }}">
                         <input type="hidden" name="ingress" value="{{ ing.name }}">
+                        {% if lockinfo %}
+                        {% if lockinfo.user == current_user %}
+                        <button class="btn btn-sm btn-secondary" type="button" onclick="unlockIngress('{{ ing.namespace }}','{{ ing.name }}')">Unlock</button>
                         <button class="btn btn-sm btn-primary" type="submit">Update</button>
+                        {% else %}
+                        <span class="badge bg-danger">Locked by {{ lockinfo.user }}</span>
+                        {% endif %}
+                        {% else %}
+                        <button class="btn btn-sm btn-warning" type="button" onclick="lockIngress('{{ ing.namespace }}','{{ ing.name }}')">Lock</button>
+                        <button class="btn btn-sm btn-primary" type="submit">Update</button>
+                        {% endif %}
                     </td>
                 </form>
             </tr>
