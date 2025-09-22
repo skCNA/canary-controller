@@ -6,7 +6,7 @@ main = Blueprint("main", __name__)
 
 # 全局锁表 {(namespace, ingress): {"user": str, "timestamp": float}}
 lock_table = {}
-lock_ttl = 300  # 5分钟自动过期
+lock_ttl = 86400  # 24h自动过期
 table_lock = threading.RLock()
 
 def cleanup_locks():
