@@ -20,7 +20,6 @@ WORKDIR /app
 
 # 复制项目文件
 COPY requirements.txt .
-COPY kubectl .
 
 # 安装系统依赖（kubectl + curl + bash）
 #RUN apt-get install -y --no-install-recommends \
