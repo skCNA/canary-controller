@@ -28,7 +28,7 @@ COPY requirements.txt .
 #    && rm -f kubectl \
 #    && apt-get clean && rm -rf /var/lib/apt/lists/* \
 
-RUN  install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+#RUN  install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 
 RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
