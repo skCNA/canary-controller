@@ -1,0 +1,4 @@
+Flask==3.0.3
+gunicorn==21.2.0
+kubernetes==30.1.0
+gevent==25.9.1

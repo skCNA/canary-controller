@@ -4,12 +4,12 @@ const CanaryFormValidator = (() => {
         const headerPattern = form.header_pattern.value.trim();
         const weight = parseInt(form.weight.value, 10);
 
-        if(headerValue && headerPattern) {
+        if (headerValue && headerPattern) {
             alert("canary-by-header-value 和 canary-by-header-pattern 不能同时设置");
             return false;
         }
 
-        if(headerPattern) {
+        if (headerPattern) {
             try {
                 new RegExp(headerPattern);
             } catch(e) {
@@ -18,7 +18,7 @@ const CanaryFormValidator = (() => {
             }
         }
 
-        if(isNaN(weight) || weight < 0 || weight > 100) {
+        if (isNaN(weight) || weight < 0 || weight > 100) {
             alert("canary-weight 必须是 0-100 的整数");
             return false;
         }

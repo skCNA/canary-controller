@@ -1,11 +1,11 @@
 from flask import Flask
 
 def create_app():
+    print("Creating app...")
     app = Flask(__name__)
-    # app.config.from_object("config.py")
 
-    # 注册路由
-    from .routes import main_bp
-    app.register_blueprint(main_bp)
 
+    from .routes import main
+    app.register_blueprint(main)
+    print("App created")
     return app
