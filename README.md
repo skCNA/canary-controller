@@ -131,8 +131,8 @@ python run.py
 
 应用通过请求头 `X-Auth-Request-Email` 识别用户身份，支持：
 
-- 集群内 OIDC 认证集成
-- 匿名访问（用户名为 "anonymous"）
+- 集成外部第三方认证方案，无需自己在去写（oauth2-proxy+dex+ldap）
+- 默认匿名访问（用户名为 "anonymous"）
 
 ### 端点详情
 
