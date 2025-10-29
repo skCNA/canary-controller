@@ -36,10 +36,10 @@ RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua
 COPY . .
 
 # 运行端口
-EXPOSE 8887
+EXPOSE 8888
 
 
 # 使用 Gunicorn 作为生产级 WSGI 服务器
 #CMD ["python3", "run.py"]
 # production
-CMD ["gunicorn", "-w", "1","-k","gevent", "-b", "0.0.0.0:8887", "--access-logfile", "-", "--error-logfile", "-", "app:create_app()"]
+CMD ["gunicorn", "-w", "1","-k","gevent", "-b", "0.0.0.0:8888", "--access-logfile", "-", "--error-logfile", "-", "app:create_app()"]
