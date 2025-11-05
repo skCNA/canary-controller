@@ -35,7 +35,6 @@ RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua
 
 COPY . .
 
-
 # 运行端口
 EXPOSE 8888
 
