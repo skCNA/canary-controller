@@ -4,6 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Changelog
 
+### v2.2.0 (2025-10-29) - Webhook Integration Release
+**Webhook Testing and Data Analysis**
+
+#### New Features
+- **Webhook Test Center**: Dedicated interface for testing webhook data structures
+- **Multi-format Support**: Handles JSON, XML, form data, and plain text
+- **Data Visualization**: Structured display of webhook payloads with syntax highlighting
+- **Request Analysis**: Complete request information capture (headers, params, timestamps)
+- **History Management**: In-memory storage of recent webhook submissions (50 records)
+- **cURL Generation**: Automatic test command generation for webhook replication
+
+#### Technical Improvements
+- Thread-safe webhook data storage with concurrent access protection
+- Automatic JSON parsing and formatting with proper error handling
+- RESTful API endpoints for webhook operations (`POST /webhook`, `GET /webhook`, `GET /webhook/{id}`)
+- Integration with existing UI framework and authentication system
+
+#### Webhook Routes
+- `POST /webhook` - Receive and process webhook data
+- `GET /webhook` - View webhook history and testing interface
+- `GET /webhook/{id}` - Detailed view of individual webhook submission
+- `POST /webhook/clear` - Clear webhook history
+
+---
+
 ### v2.1.0 (2025-10-24) - Frontend Enhancement Release
 **Major User Experience Improvements**
 
@@ -86,6 +111,10 @@ gunicorn -w 1 -k gevent -b 0.0.0.0:8888 app:create_app()
 - `GET /set` - Updates Ingress annotations (requires lock)
 - `POST /lock` - Locks Ingress for modifications
 - `POST /unlock` - Unlocks Ingress
+- `POST /webhook` - Receive webhook data for testing and analysis
+- `GET /webhook` - Webhook testing center interface
+- `GET /webhook/{id}` - Detailed view of individual webhook submission
+- `POST /webhook/clear` - Clear webhook history
 
 #### Kubernetes Utils (`app/kubectl_utils.py`)
 - `get_ingresses()` - Fetches all Ingress with `canary: "true"` annotation
@@ -96,6 +125,13 @@ gunicorn -w 1 -k gevent -b 0.0.0.0:8888 app:create_app()
 - Global lock table with 24-hour TTL automatic cleanup
 - User identification via `X-Auth-Request-Email` header (falls back to "anonymous")
 - Thread-safe operations using `threading.RLock()`
+
+#### Webhook System
+- In-memory storage of webhook data with configurable limit (default: 50 records)
+- Automatic JSON parsing and formatting for structured data analysis
+- Thread-safe webhook data storage using `webhook_lock`
+- Support for multiple content types: JSON, XML, form data, plain text
+- Complete request metadata capture (headers, timestamps, remote address, user agent)
 
 ## Configuration
 
@@ -112,6 +148,17 @@ Modify in `app/kubectl_utils.py:7` if different path needed.
 1. **Weight-based**: `nginx.ingress.kubernetes.io/canary-weight` (0-100)
 2. **Header-based**: `nginx.ingress.kubernetes.io/canary-by-header`, `canary-by-header-value`, `canary-by-header-pattern`
 3. **Cookie-based**: `nginx.ingress.kubernetes.io/canary-by-cookie`
+
+### Webhook Configuration
+- **Endpoint**: `http://localhost:8888/webhook` (or your deployment URL + `/webhook`)
+- **Methods**: GET, POST
+- **Content Types**: application/json, application/xml, application/x-www-form-urlencoded, text/plain
+- **Storage**: In-memory, max 50 recent records
+- **Data Features**:
+  - Automatic JSON parsing and formatting
+  - Complete request metadata capture
+  - cURL command generation for testing
+  - Copy-to-clipboard functionality
 
 ## Dependencies
 
@@ -143,6 +190,11 @@ app/static/
 │   └── canary-input.css (Custom styles for enhanced UI)
 └── js/
     └── canary-main.js (Integrated all JavaScript functionality)
+
+app/templates/
+├── index.html (Main dashboard with Canary management)
+├── webhook.html (Webhook testing center interface)
+└── webhook_detail.html (Detailed webhook submission view)
 ```
 
 #### JavaScript Modules
@@ -151,6 +203,7 @@ app/static/
 - **FormHandler**: Ajax form submission handling
 - **FormValidator**: Real-time form validation
 - **LockService**: Lock/Unlock API management
+- **Webhook Interface**: Data copying, URL management, and interactive testing features
 
 #### User Experience Improvements
 - No page refreshes for form submissions
@@ -169,3 +222,5 @@ app/static/
 - All modifications require acquiring a lock first to prevent concurrent changes
 - Kubernetes RBAC permissions are handled externally through the kubeconfig
 - In-cluster deployment uses service account permissions
+- Webhook data is stored in-memory only and will be lost on application restart
+- Webhook endpoint accepts any data format for testing purposes - no authentication required
