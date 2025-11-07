@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webhook数据接收中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/canary-input.css') }}">
+    <style>
+        .webhook-card {
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+        .webhook-card:hover {
+            border-left-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .method-badge {
+            font-size: 0.8em;
+        }
+        .data-preview {
+            max-height: 100px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .header-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <div class="header-info">
+        <h2>🎣 Webhook数据接收中心</h2>
+        <p class="mb-0">
+            <strong>接收地址:</strong>
+            <code>{{ request.host_url }}webhook</code>
+            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyWebhookUrl()">📋 复制</button>
+        </p>
+        <p class="mb-0 text-muted mt-1">支持接收任意格式的POST/GET数据，自动解析并美化显示</p>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5>接收历史 ({{ webhooks|length }} 条记录)</h5>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            {% if webhooks %}
+            <button class="btn btn-outline-danger btn-sm" onclick="clearWebhooks()">🗑️ 清空历史</button>
+            <button class="btn btn-outline-secondary btn-sm ms-2" onclick="refreshPage()">🔄 刷新</button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if webhooks %}
+    <div class="webhook-list">
+        {% for webhook in webhooks %}
+        <div class="card webhook-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge method-badge bg-{{ 'success' if webhook.method == 'GET' else 'primary' }} me-2">
+                                {{ webhook.method }}
+                            </span>
+                            <span class="badge bg-secondary me-2">{{ webhook.content_type or 'unknown' }}</span>
+                            <span class="timestamp me-3">
+                                📅 {{ webhook.timestamp }}
+                            </span>
+                            <span class="badge bg-info">
+                                🌐 {{ webhook.remote_addr }}
+                            </span>
+                        </div>
+
+                        {% if webhook.data %}
+                        <div class="data-preview mb-2">
+                            <strong>数据预览:</strong><br>
+                            {{ webhook.raw_data[:200] }}{% if webhook.raw_data|length > 200 %}...{% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="text-muted small">
+                            {% if webhook.query_params %}
+                            <span class="me-3">📋 查询参数: {{ webhook.query_params|length }} 个</span>
+                            {% endif %}
+                            {% if webhook.form_data %}
+                            <span class="me-3">📝 表单数据: {{ webhook.form_data|length }} 个</span>
+                            {% endif %}
+                            <span>🤖 {{ webhook.user_agent[:30] }}{% if webhook.user_agent|length > 30 %}...{% endif %}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-end">
+                        <a href="{{ url_for('main.view_webhook_detail', webhook_id=webhook.id) }}"
+                           class="btn btn-outline-primary btn-sm">🔍 查看详情</a>
+                        <button class="btn btn-outline-secondary btn-sm ms-2"
+                                onclick="copyData({{ webhook.id }})">📋 复制数据</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h4>📭 暂无接收数据</h4>
+        <p>向以下地址发送数据即可开始测试:</p>
+        <div class="mt-3">
+            <code style="background: #f8f9fa; padding: 15px; border-radius: 5px; display: inline-block;">
+                curl -X POST {{ request.host_url }}webhook \<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;-d '{"test": "hello world", "timestamp": "2024-01-01T00:00:00Z"}'
+            </code>
+        </div>
+        <p class="mt-3 text-muted">
+            支持 GET/POST 请求，自动识别 JSON、表单数据等格式
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyWebhookUrl() {
+    const url = '{{ request.host_url }}webhook';
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Webhook地址已复制到剪贴板', 'success');
+    });
+}
+
+function copyData(webhookId) {
+    fetch('/webhook/' + webhookId)
+        .then(response => response.json())
+        .then(data => {
+            const text = JSON.stringify(data, null, 2);
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('数据已复制到剪贴板', 'success');
+            });
+        })
+        .catch(error => {
+            showToast('复制失败', 'error');
+        });
+}
+
+function clearWebhooks() {
+    if (confirm('确定要清空所有历史记录吗？')) {
+        fetch('/webhook/clear', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('历史记录已清空', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('清空失败', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('清空失败', 'error');
+            });
+    }
+}
+
+function refreshPage() {
+    location.reload();
+}
+
+function showToast(message, type) {
+    // 创建一个简单的toast提示
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+</body>
+</html>

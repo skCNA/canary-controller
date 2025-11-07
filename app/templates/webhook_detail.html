@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webhook详情 #{{ webhook.id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/canary-input.css') }}">
+    <style>
+        .json-viewer {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .header-table {
+            font-size: 0.9em;
+        }
+        .section-title {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            margin-top: 25px;
+        }
+        .badge-method {
+            font-size: 0.8em;
+            padding: 4px 8px;
+        }
+        .back-link {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        .data-section {
+            position: relative;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding-top: 40px;
+        }
+        .data-section-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('main.view_webhooks') }}" class="back-link">← 返回列表</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                🎣 Webhook详情 #{{ webhook.id }}
+                <span class="badge badge-method bg-{{ 'success' if webhook.method == 'GET' else 'light text-dark' }} ms-2">
+                    {{ webhook.method }}
+                </span>
+            </h4>
+        </div>
+        <div class="card-body">
+            <!-- 基本信息 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm header-table">
+                        <tr>
+                            <td><strong>接收时间:</strong></td>
+                            <td>{{ webhook.timestamp }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>时间戳:</strong></td>
+                            <td>{{ "%.3f"|format(webhook.timestamp_unix) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>请求URL:</strong></td>
+                            <td style="word-break: break-all;">{{ webhook.url }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>远程地址:</strong></td>
+                            <td>{{ webhook.remote_addr }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm header-table">
+                        <tr>
+                            <td><strong>Content-Type:</strong></td>
+                            <td>{{ webhook.content_type or '未指定' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>User-Agent:</strong></td>
+                            <td style="word-break: break-all;">{{ webhook.user_agent or '未知' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据大小:</strong></td>
+                            <td>{{ webhook.raw_data|length }} 字节</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Header数量:</strong></td>
+                            <td>{{ webhook.headers|length }} 个</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 请求头 -->
+            <h5 class="section-title">📋 请求头 (Headers)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('headers')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="headers">
+{{ webhook.headers | tojson(indent=2) }}
+                </div>
+            </div>
+
+            <!-- 查询参数 -->
+            {% if webhook.query_params %}
+            <h5 class="section-title">🔍 查询参数 (Query Parameters)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('query-params')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="query-params">
+{{ webhook.query_params | tojson(indent=2) }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 表单数据 -->
+            {% if webhook.form_data %}
+            <h5 class="section-title">📝 表单数据 (Form Data)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('form-data')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="form-data">
+{{ webhook.form_data | tojson(indent=2) }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 解析后的JSON数据 -->
+            {% if webhook.data %}
+            <h5 class="section-title">📊 解析数据 (JSON)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('parsed-data')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="parsed-data">
+{{ webhook.data | tojson(indent=2) }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 原始数据 -->
+            <h5 class="section-title">📄 原始数据 (Raw Data)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('raw-data')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="raw-data">{{ webhook.raw_data }}</div>
+            </div>
+
+            <!-- 测试用例 -->
+            <h5 class="section-title">🧪 测试用例 (cURL)</h5>
+            <div class="data-section">
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard('curl-command')">
+                    📋 复制
+                </button>
+                <div class="json-viewer" id="curl-command">
+curl -X {{ webhook.method }} "{{ webhook.url }}" \
+{% for key, value in webhook.headers.items() if key not in ['Host', 'Content-Length'] %}
+  -H "{{ key }}: {{ value }}" \
+{% endfor %}
+{% if webhook.method == 'POST' and webhook.raw_data %}
+  -d '{{ webhook.raw_data.replace("'", "'\"'\"'") }}'
+{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a href="{{ url_for('main.view_webhooks') }}" class="btn btn-outline-primary">← 返回列表</a>
+        <button class="btn btn-outline-secondary ms-2" onclick="window.print()">🖨️ 打印</button>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent || element.innerText;
+
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('内容已复制到剪贴板', 'success');
+    }).catch(err => {
+        // 降级方案
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('内容已复制到剪贴板', 'success');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+</body>
+</html>

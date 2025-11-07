@@ -1,4 +1,5 @@
-import time, threading
+import time, threading, json
+from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from .kubectl_utils import get_ingresses,set_ingress_annotations
 
@@ -8,6 +9,11 @@ main = Blueprint("main", __name__)
 lock_table = {}
 lock_ttl = 86400  # 24h自动过期
 table_lock = threading.RLock()
+
+# Webhook数据存储
+webhook_data = []
+webhook_max_records = 50  # 最多保存50条记录
+webhook_lock = threading.RLock()
 
 def cleanup_locks():
     now = time.time()
@@ -80,3 +86,83 @@ def unlock_ingress():
         if key in lock_table and lock_table[key]["user"] == user:
             del lock_table[key]
         return jsonify({"status": "unlocked"})
+
+@main.route("/webhook", methods=["POST"])
+def receive_webhook():
+    """接收webhook数据的接口"""
+    try:
+        # 获取请求信息
+        headers = dict(request.headers)
+        content_type = request.content_type
+
+        # 尝试解析JSON数据
+        if content_type and 'application/json' in content_type:
+            try:
+                data = request.get_json()
+                raw_data = json.dumps(data, ensure_ascii=False, indent=2)
+            except:
+                data = None
+                raw_data = request.get_data(as_text=True)
+        else:
+            data = None
+            raw_data = request.get_data(as_text=True)
+
+        # 构建存储记录
+        webhook_record = {
+            "id": len(webhook_data) + 1,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp_unix": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "headers": headers,
+            "content_type": content_type,
+            "data": data,
+            "raw_data": raw_data,
+            "query_params": dict(request.args),
+            "form_data": dict(request.form) if request.form else None,
+            "remote_addr": request.remote_addr,
+            "user_agent": request.headers.get("User-Agent", "")
+        }
+
+        # 存储数据
+        with webhook_lock:
+            webhook_data.insert(0, webhook_record)
+            # 保持最大记录数
+            if len(webhook_data) > webhook_max_records:
+                webhook_data.pop()
+
+        return jsonify({
+            "status": "success",
+            "message": "Webhook data received successfully",
+            "id": webhook_record["id"],
+            "timestamp": webhook_record["timestamp"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to process webhook: {str(e)}"
+        }), 500
+
+@main.route("/webhook", methods=["GET"])
+@main.route("/webhook/view", methods=["GET"])
+def view_webhooks():
+    """查看接收到的webhook数据"""
+    with webhook_lock:
+        return render_template("webhook.html", webhooks=webhook_data)
+
+@main.route("/webhook/clear", methods=["POST"])
+def clear_webhooks():
+    """清空webhook历史数据"""
+    with webhook_lock:
+        webhook_data.clear()
+    return jsonify({"status": "success", "message": "Webhook history cleared"})
+
+@main.route("/webhook/<int:webhook_id>", methods=["GET"])
+def view_webhook_detail(webhook_id):
+    """查看特定webhook的详细信息"""
+    with webhook_lock:
+        webhook = next((w for w in webhook_data if w["id"] == webhook_id), None)
+        if not webhook:
+            return jsonify({"error": "Webhook not found"}), 404
+        return render_template("webhook_detail.html", webhook=webhook)
