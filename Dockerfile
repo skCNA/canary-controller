@@ -23,4 +23,4 @@ EXPOSE 8888
 # 使用 Gunicorn 作为生产级 WSGI 服务器
 #CMD ["python3", "run.py"]
 # production
-CMD ["gunicorn", "-w", "1","-k","gevent", "-b", "0.0.0.0:8888", "--access-logfile", "-", "--error-logfile", "-", "app:create_app()"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:create_app()"]
