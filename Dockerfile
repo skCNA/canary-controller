@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         -v \
        --no-build-isolation \
       -r requirements.txt \
-      -i https://deploy:zmexing@nexus.zmexing.com/repository/pypi_group/simple \
+      -i https://deploy:zmexing@nexus.zmexing.com/repository/pypi_group/simple
 
 COPY . .
 
