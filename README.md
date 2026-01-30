@@ -12,6 +12,7 @@ Canary Controller 是一个基于 Flask 的 Web 应用程序，提供直观的�
 - 🔄 **智能输入框** - 点击展开支持长文本编辑，实时字符计数
 - 🔔 **优雅的通知系统** - Toast提示替代传统alert，用户体验友好
 - 🔒 **并发控制** - 用户级别的锁机制防止并发修改
+- 🩺 **健康检查与优雅下线** - 提供就绪探针与下线拦截能力
 - 🎯 **多种策略支持** - 支持权重、请求头、Cookie 等 Canary 策略
 - ⚡ **Ajax操作** - 无刷新表单提交，实时反馈
 - 🎹 **实时验证** - 前端表单验证，即时错误提示
@@ -125,6 +126,23 @@ python run.py
 
 应用将在 `http://0.0.0.0:8888` 启动。
 
+### 生产运行（Gunicorn）
+
+```bash
+gunicorn -c gunicorn.conf.py "app:create_app()"
+```
+
+### 健康检查与优雅下线
+
+- `/healthz`：存活探针，始终返回 200
+- `/readyz`：就绪探针，正常返回 200；下线中返回 503
+- 下线触发：Gunicorn worker 收到 SIGTERM/SIGINT 后进入下线状态
+- 行为：下线中拒绝新请求（返回 503），在途请求继续完成
+
+**建议**：
+- 在 Kubernetes 中将就绪探针对应到 `/readyz`
+- 结合 `preStop` 延迟与 `terminationGracePeriodSeconds` 让在途请求完成
+
 ## API 文档
 
 ### 认证
@@ -221,6 +239,13 @@ python run.py
 - 用户操作记录
 - 锁获取/释放
 - Kubernetes API 调用
+
+## 测试
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
 
 ## 贡献指南
 
