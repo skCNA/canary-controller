@@ -12,14 +12,6 @@ WORKDIR /app
 # 复制依赖文件
 COPY requirements.txt .
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-        uv  pip install  \
-       --system \
-        -v \
-       --no-build-isolation \
-      -r requirements.txt \
-      -i https://deploy:zmexing@nexus.zmexing.com/repository/pypi_group/simple \
-
 ## 使用缓存机制加速依赖包下载
 #RUN mount=type=cache,target=/root/pip_cached \
 #    pip download -d /root/pip_cached -r requirements.txt -i https://deploy:zmexing@nexus.zmexing.com/repository/pypi_group/simple
@@ -27,6 +19,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ## 安装依赖包
 #RUN mount=type=cache,target=/root/pip_cached \
 #    pip install --no-index --find-links=/root/pip_cached --no-build-isolation -r requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+        uv  pip install  \
+       --system \
+        -v \
+       --no-build-isolation \
+      -r requirements.txt \
+      -i https://deploy:zmexing@nexus.zmexing.com/repository/pypi_group/simple \
 
 COPY . .
 
